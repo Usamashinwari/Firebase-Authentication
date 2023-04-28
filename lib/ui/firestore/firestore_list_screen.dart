@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase/ui/firestore/add_data_in_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase/ui/auth/login%20screen.dart';
@@ -17,6 +18,7 @@ class FireStoreScreen extends StatefulWidget {
 class _FireStoreScreenState extends State<FireStoreScreen> {
   final auth = FirebaseAuth.instance;
   final editController = TextEditingController();
+  final FireStore = FirebaseFirestore.instance.collection('users').snapshots();
 
   @override
   void initState() {
@@ -32,13 +34,26 @@ class _FireStoreScreenState extends State<FireStoreScreen> {
           SizedBox(
             height: 10,
           ),
-          Expanded(child: ListView.builder(
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text('usama'),
-              );
-            },
-          )),
+          StreamBuilder<QuerySnapshot>(
+              stream: FireStore,
+              builder: (BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting)
+                  return CircularProgressIndicator();
+
+                if (snapshot.hasError) return Text('some error');
+
+                return Expanded(
+                    child: ListView.builder(
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title:
+                          Text(snapshot.data!.docs[index]['title'].toString()),
+                    );
+                  },
+                ));
+              }),
         ],
       )),
       appBar: AppBar(
